@@ -5,6 +5,9 @@
   </PropertyGroup>
 
   <ItemGroup>
+    <PackageReference Include="LtiAdvantage" Version="1.0.0" />
+    <PackageReference Include="LtiAdvantage.AspNetCore" Version="1.0.0" />
+    <PackageReference Include="LtiAdvantage.IdentityModel" Version="1.0.0" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.InMemory" Version="6.0.5" />
     <PackageReference Include="OpenIddict" Version="3.1.1" />
     <PackageReference Include="OpenIddict.AspNetCore" Version="3.1.1" />

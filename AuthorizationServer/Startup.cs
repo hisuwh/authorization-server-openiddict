@@ -1,9 +1,11 @@
+using System.Security.Cryptography;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Hosting;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using Microsoft.IdentityModel.Tokens;
 
 namespace AuthorizationServer
 {
@@ -45,7 +47,9 @@ namespace AuthorizationServer
                         .AllowClientCredentialsFlow()
                         .AllowAuthorizationCodeFlow()
                             .RequireProofKeyForCodeExchange()
-                        .AllowRefreshTokenFlow();
+                        .AllowRefreshTokenFlow()
+                        .AllowImplicitFlow()
+                        ;
 
                     options
                         .SetTokenEndpointUris("/connect/token")
@@ -55,11 +59,21 @@ namespace AuthorizationServer
                     // Encryption and signing of tokens
                     options
                         .AddEphemeralEncryptionKey()
+//                         .AddEncryptionKey(new JsonWebKey(@"{
+//     ""kty"": ""RSA"",
+//     ""n"": ""sH8_-uavYxkWoEXm0QHDrZbfWByo0pEQdpy-EEdiQU_LVxlS4Et-ArUVq28hf1PRgGxRGEMzVXddyUgrrYuPV_17okqZZshfJnjqUpcN5d-mkyIs3XO-DLqI2UIoNXtEP5zlWvJTkqzUUlXg9y3QIHM_-1j8G3KeJKxIhezuLIUMJLSfJv3CgKF6CHPCT0JLPbOEStDCzzqQwIulDhU3Ts6N4CPttOoG8w9FS0Z6fJjYWeeztAtstBggXw4_Hgq7_-TaxV8tct5rWighV50Z5SJA1xi7w4GlfvV4EpwixUfSOZzAN_RAzFoiq6MgBCl-rtb7mCAxuSfkD5xSoMe0rw"",
+//     ""e"": ""AQAB"",
+//     ""alg"": ""RS256"",
+//     ""use"": ""sig""
+// }"))
                         .AddEphemeralSigningKey()
                         .DisableAccessTokenEncryption();
 
                     // Register scopes (permissions)
-                    options.RegisterScopes("api");
+                    options
+                        .RegisterScopes("api")
+                        // .RegisterClaims("some claim")
+                        ;
 
                     // Register the ASP.NET Core host and configure the ASP.NET Core-specific options.
                     options

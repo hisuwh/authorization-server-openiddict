@@ -48,6 +48,31 @@ namespace AuthorizationServer
                     }
                 }, cancellationToken);
             }
+
+            if (await manager.FindByClientIdAsync("saltire.lti.app", cancellationToken) is null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "saltire.lti.app",
+                    ClientSecret = "saltire.lti.app",
+                    DisplayName = "saLTIre",
+                    RedirectUris = { new Uri("https://saltire.lti.app/tool") },
+                    Permissions =
+                    {
+                        OpenIddictConstants.Permissions.Endpoints.Authorization,
+                        OpenIddictConstants.Permissions.Endpoints.Token,
+
+                        OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                        OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+                        OpenIddictConstants.Permissions.GrantTypes.Implicit,
+                        OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+
+                        OpenIddictConstants.Permissions.Prefixes.Scope + "api",
+                        OpenIddictConstants.Permissions.ResponseTypes.Code,
+                        OpenIddictConstants.Permissions.ResponseTypes.IdToken
+                    }
+                }, cancellationToken);
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

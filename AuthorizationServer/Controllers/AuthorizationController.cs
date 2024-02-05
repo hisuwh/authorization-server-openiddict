@@ -1,14 +1,17 @@
 using System;
 using System.Collections.Generic;
+using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using LtiAdvantage.Lti;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
 
@@ -44,9 +47,81 @@ namespace AuthorizationServer.Controllers
             {
                 // 'subject' claim which is required
                 new Claim(OpenIddictConstants.Claims.Subject, result.Principal.Identity.Name),
+                new Claim(OpenIddictConstants.Claims.Issuer, $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}"),
+                // new Claim(OpenIddictConstants.Claims.Audience, "saltire.lti.app"),
                 new Claim("some claim", "some value").SetDestinations(OpenIddictConstants.Destinations.AccessToken),
                 new Claim(OpenIddictConstants.Claims.Email, "some@email").SetDestinations(OpenIddictConstants.Destinations.IdentityToken)
             };
+
+            var ltiMessageHint = request.GetParameter("lti_message_hint");
+
+            if (ltiMessageHint.HasValue)
+            {
+                var message = JToken.Parse(ltiMessageHint.Value.ToString());
+                var id = message.Value<int>("id");
+                var course = message.Value<int?>("courseId");
+                var messageType = message.Value<string>("messageType");
+
+                var resourceRequest = new LtiResourceLinkRequest
+                {
+                    Version = "1.3.0",
+                    DeploymentId = "cLWwj9cbmkSrCNsckEFBmA",
+                    FamilyName = "Griffin",
+                    GivenName = "Stewie",
+                    LaunchPresentation = new LaunchPresentationClaimValueType
+                    {
+                        DocumentTarget = DocumentTarget.Window,
+                        Locale = CultureInfo.CurrentUICulture.Name,
+                        ReturnUrl = $"{HttpContext.Request.Scheme}://{HttpContext.Request.Host}"
+                    },
+                    Lis = new LisClaimValueType
+                    {
+                        PersonSourcedId = "test-person-sis-id",
+                        CourseSectionSourcedId = "test-course-sis-id"
+                    },
+                    Lti11 = new LtiMigrationClaimValueType
+                    {
+                        UserId = "user-1234",
+                    },
+                    Platform = new PlatformClaimValueType
+                    {
+                        ContactEmail = "test@example.com",
+                        Description = "Test LTI imp",
+                        Guid = Guid.NewGuid().ToString(),
+                        Name = "LTI Test",
+                        ProductFamilyCode = "abcde",
+                        Url = "https://c86c-2a00-23c8-7589-3201-5802-edc5-495e-55ed.ngrok-free.app/",
+                        Version = "0.0.1"
+                    },
+                    ResourceLink = new ResourceLinkClaimValueType
+                    {
+                        Id = $"{id}",
+                        Title = "Resource title",
+                        Description = "Resource description"
+                    },
+                    Roles = new Role[]
+                    {
+                        Role.SystemUser,
+                        Role.ContextLearner
+                    },
+                    TargetLinkUri = "https://saltire.lti.app/tool",
+                    Context = new ContextClaimValueType
+                    {
+                        Id = $"{course}",
+                        Title = "Test course",
+                        Type = new []
+                        {
+                            ContextType.CourseSection
+                        }
+                    }
+                };
+
+                foreach (var resourceClaim in resourceRequest.Claims)
+                {
+                    resourceClaim.SetDestinations(OpenIddictConstants.Destinations.IdentityToken);
+                    claims.Add(resourceClaim);
+                }
+            }
 
             var claimsIdentity = new ClaimsIdentity(claims, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
 
@@ -54,6 +129,8 @@ namespace AuthorizationServer.Controllers
 
             // Set requested scopes (this is not done automatically)
             claimsPrincipal.SetScopes(request.GetScopes());
+            // claimsPrincipal.SetResources("saltire.lti.app");
+            
 
             // Signing in with the OpenIddict authentiction scheme trigger OpenIddict to issue a code (which can be exchanged for an access token)
             return SignIn(claimsPrincipal, OpenIddictServerAspNetCoreDefaults.AuthenticationScheme);
