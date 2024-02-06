@@ -4,6 +4,7 @@ using System.Globalization;
 using System.Linq;
 using System.Security.Claims;
 using System.Threading.Tasks;
+using LtiAdvantage.AssignmentGradeServices;
 using LtiAdvantage.Lti;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Authentication;
@@ -11,6 +12,7 @@ using Microsoft.AspNetCore.Authentication.Cookies;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Routing;
 using Newtonsoft.Json.Linq;
 using OpenIddict.Abstractions;
 using OpenIddict.Server.AspNetCore;
@@ -19,6 +21,13 @@ namespace AuthorizationServer.Controllers
 {
     public class AuthorizationController : Controller
     {
+        private readonly LinkGenerator _linkGenerator;
+
+        public AuthorizationController(LinkGenerator linkGenerator)
+        {
+            _linkGenerator = linkGenerator;
+        }
+        
         [HttpGet("~/connect/authorize")]
         [HttpPost("~/connect/authorize")]
         [IgnoreAntiforgeryToken]
@@ -65,7 +74,7 @@ namespace AuthorizationServer.Controllers
                 var resourceRequest = new LtiResourceLinkRequest
                 {
                     Version = "1.3.0",
-                    DeploymentId = "cLWwj9cbmkSrCNsckEFBmA",
+                    DeploymentId = "b5ab88863bec27343ae63a5f4de6eb4996990ce8",
                     FamilyName = "Griffin",
                     GivenName = "Stewie",
                     LaunchPresentation = new LaunchPresentationClaimValueType
@@ -87,7 +96,7 @@ namespace AuthorizationServer.Controllers
                     {
                         ContactEmail = "test@example.com",
                         Description = "Test LTI imp",
-                        Guid = Guid.NewGuid().ToString(),
+                        Guid = "b0631ea5-96b3-4b3f-81f1-58b5ba8669a1",
                         Name = "LTI Test",
                         ProductFamilyCode = "abcde",
                         Url = "https://c86c-2a00-23c8-7589-3201-5802-edc5-495e-55ed.ngrok-free.app/",
@@ -104,7 +113,7 @@ namespace AuthorizationServer.Controllers
                         Role.SystemUser,
                         Role.ContextLearner
                     },
-                    TargetLinkUri = "https://saltire.lti.app/tool",
+                    TargetLinkUri = "https://aquilalearning.moodlecloud.com/enrol/lti/launch.php",
                     Context = new ContextClaimValueType
                     {
                         Id = $"{course}",
@@ -113,6 +122,27 @@ namespace AuthorizationServer.Controllers
                         {
                             ContextType.CourseSection
                         }
+                    },
+                    AssignmentGradeServices = new AssignmentGradeServicesClaimValueType
+                    {
+                        Scope = new List<string>
+                        {
+                            LtiAdvantage.Constants.LtiScopes.Ags.LineItem
+                        },
+                        LineItemUrl = _linkGenerator.GetUriByRouteValues(
+                            LtiAdvantage.Constants.ServiceEndpoints.Ags.LineItemService,
+                                new { contextId = course, lineItemId = "987" }, 
+                                HttpContext.Request.Scheme, 
+                            HttpContext.Request.Host),
+                        LineItemsUrl = _linkGenerator.GetUriByRouteValues(
+                            LtiAdvantage.Constants.ServiceEndpoints.Ags.LineItemsService,
+                            new { contextId = course }, 
+                            HttpContext.Request.Scheme, 
+                            HttpContext.Request.Host),
+                    },
+                    Custom = new Dictionary<string, string>
+                    {
+                        ["id"] = "9725cbff-6d81-4dcc-8730-36d8c7ce1ac0"
                     }
                 };
 

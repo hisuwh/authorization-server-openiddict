@@ -73,6 +73,32 @@ namespace AuthorizationServer
                     }
                 }, cancellationToken);
             }
+
+            if (await manager.FindByClientIdAsync("c1ca1fccd4468561260cb4bbf18493ca52ff93d3b9727c36051627ce2d77", cancellationToken) is null)
+            {
+                await manager.CreateAsync(new OpenIddictApplicationDescriptor
+                {
+                    ClientId = "c1ca1fccd4468561260cb4bbf18493ca52ff93d3b9727c36051627ce2d77",
+                    ClientSecret = "aquilalearning.moodlecloud.com",
+                    DisplayName = "Moodle",
+                    RedirectUris = { new Uri("https://aquilalearning.moodlecloud.com/enrol/lti/launch.php") },
+                    Permissions =
+                    {
+                        OpenIddictConstants.Permissions.Endpoints.Authorization,
+                        OpenIddictConstants.Permissions.Endpoints.Token,
+
+                        OpenIddictConstants.Permissions.GrantTypes.AuthorizationCode,
+                        OpenIddictConstants.Permissions.GrantTypes.ClientCredentials,
+                        OpenIddictConstants.Permissions.GrantTypes.Implicit,
+                        OpenIddictConstants.Permissions.GrantTypes.RefreshToken,
+
+                        OpenIddictConstants.Permissions.Prefixes.Scope + "api",
+                        OpenIddictConstants.Permissions.ResponseTypes.Code,
+                        OpenIddictConstants.Permissions.ResponseTypes.IdToken
+                    }
+                }, cancellationToken);
+                
+            }
         }
 
         public Task StopAsync(CancellationToken cancellationToken) => Task.CompletedTask;

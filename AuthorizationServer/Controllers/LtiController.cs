@@ -23,11 +23,11 @@ public class LtiController : Controller
     public async Task<IActionResult> Launch()
     {
         
-        var url = new RequestUrl("https://saltire.lti.app/tool").Create(new
+        var url = new RequestUrl("https://aquilalearning.moodlecloud.com/enrol/lti/login.php?id=c1ca1fccd4468561260cb4bbf18493ca52ff93d3b9727c36051627ce2d77").Create(new
         {
             iss = "https://c86c-2a00-23c8-7589-3201-5802-edc5-495e-55ed.ngrok-free.app/",
             login_hint = "1234",
-            target_link_uri = "https://saltire.lti.app/tool",
+            target_link_uri = "https://aquilalearning.moodlecloud.com/enrol/lti/launch.php",
             lti_message_hint = JsonConvert.SerializeObject(new
             {
                 id = "1234",
